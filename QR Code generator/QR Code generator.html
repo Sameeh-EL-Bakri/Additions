@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            margin: auto;
+            max-width: 400px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="number"], input[type="checkbox"], input[type="text"] {
+            margin: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #passwordOutput {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 18px;
+            background: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+
+        #passwordStrength {
+            margin-top: 10px;
+        }
+
+        #passwordCategory {
+            margin-top: 10px;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 10px;
+            background: #ccc;
+            border-radius: 5px;
+        }
+
+        #progressBar div {
+            height: 100%;
+            width: 0;
+            background: #28a745;
+            border-radius: 5px;
+        }
+
+        #copyBtn {
+            margin-top: 10px;
+            background: #28a745;
+        }
+
+        .alert {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Password Generator</h1>
+        
+        <label for="lengthInput">Password Length:</label>
+        <input type="number" id="lengthInput" min="4" max="50" value="12">
+        
+        <div>
+            <input type="checkbox" id="upperCase"> Include Uppercase Letters
+            <input type="checkbox" id="lowerCase" checked> Include Lowercase Letters
+            <input type="checkbox" id="numbers" checked> Include Numbers
+            <input type="checkbox" id="symbols" checked> Include Symbols
+        </div>
+        
+        <div id="passwordCategory">
+            <label for="categoryInput">Password Category:</label>
+            <input type="text" id="categoryInput" placeholder="e.g., Email, Bank">
+        </div>
+
+        <button id="generateBtn">Generate Password</button>
+        <div id="progressBar"><div id="progress"></div></div>
+
+        <div id="passwordOutput">Your password will appear here.</div>
+        
+        <button id="saveBtn">Save Password</button>
+        
+        <div id="passwordStrength"></div>
+        <div class="alert" id="alertMessage"></div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const passwordOutput = document.getElementById('passwordOutput');
+        const lengthInput = document.getElementById('lengthInput');
+        const upperCase = document.getElementById('upperCase');
+        const lowerCase = document.getElementById('lowerCase');
+        const numbers = document.getElementById('numbers');
+        const symbols = document.getElementById('symbols');
+        const copyBtn = document.getElementById('copyBtn');
+        const categoryInput = document.getElementById('categoryInput');
+        const passwordStrength = document.getElementById('passwordStrength');
+        const saveBtn = document.getElementById('saveBtn');
+        const alertMessage = document.getElementById('alertMessage');
+        const progressBar = document.getElementById('progress');
+        let passwords = [];
+
+        function calculateStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+            let strengthLabel = 'Weak';
+            if (strength === 4) strengthLabel = 'Strong';
+            else if (strength === 3) strengthLabel = 'Medium';
+            passwordStrength.textContent = `Strength: ${strengthLabel}`;
+            progressBar.style.width = `${(strength / 4) * 100}%`;
+        }
+
+        function savePassword() {
+            const password = passwordOutput.textContent;
+            const category = categoryInput.value;
+            if (password !== 'Your password will appear here.' && category) {
+                passwords.push({ password, category });
+                alertMessage.textContent = 'Password saved successfully!';
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+            } else {
+                alertMessage.textContent = 'Please generate a password and provide a category.';
+            }
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const length = parseInt(lengthInput.value);
+            if (length < 4 || length > 50) {
+                passwordOutput.textContent = 'Please choose a length between 4 and 50.';
+                alertMessage.textContent = '';
+                return;
+            }
+
+            const upperCaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowerCaseChars = 'abcdefghijklmnopqrstuvwxyz';
+            const numberChars = '0123456789';
+            const symbolChars = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+            let characters = '';
+            if (upperCase.checked) characters += upperCaseChars;
+            if (lowerCase.checked) characters += lowerCaseChars;
+            if (numbers.checked) characters += numberChars;
+            if (symbols.checked) characters += symbolChars;
+
+            if (characters === '') {
+                passwordOutput.textContent = 'Please select at least one type of character.';
+                alertMessage.textContent = '';
+                return;
+            }
+
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * characters.length);
+                password += characters[randomIndex];
+            }
+
+            passwordOutput.textContent = password;
+            calculateStrength(password);
+        });
+
+        saveBtn.addEventListener('click', savePassword);
+
+        // Retrieve saved passwords from localStorage
+        if (localStorage.getItem('passwords')) {
+            passwords = JSON.parse(localStorage.getItem('passwords'));
+        }
+    </script>
+</body>
+</html>
